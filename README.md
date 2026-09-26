@@ -1,51 +1,54 @@
 # Urban Company Clone
 
-A full-stack service booking application built with Spring Boot, designed to mimic the core functionality of Urban Company. This application allows users to browse services, find providers, and book appointments seamlessly.
+A full-stack service booking application built with Spring Boot, designed to mimic the core functionality of Urban Company. Users can browse services, discover nearby providers, and book appointments, while providers manage their profile and incoming requests through a dedicated portal.
 
 ## 🚀 Features
 
-- **User Management**: Secure registration and login for users and service providers.
-- **Service Catalog**: Browse various home services with detailed descriptions.
-- **Provider Discovery**: Find qualified service providers based on their expertise and location.
-- **Booking System**: Intuitive flow to request services, manage a cart, and book appointments.
-- **Provider Portal**: A dedicated interface for providers to manage their profile and service requests.
-- **Caching**: Integrated Redis for high-performance data retrieval.
-- **Responsive UI**: Built with Thymeleaf, HTML, CSS, and JavaScript for a clean user experience.
+- **User Management**: Registration and login for both customers and service providers, backed by Spring Security.
+- **Service Catalog**: Browse available home services with descriptions and pricing.
+- **Provider Discovery**: Find providers by service type and location (distance-based matching).
+- **Booking Flow**: Add services to a cart, submit a service request, and track its status.
+- **Provider Portal**: Providers can manage their profile and respond to incoming service requests.
+- **Caching**: Redis-backed caching for faster data retrieval.
+- **Server-Rendered UI**: Thymeleaf templates with vanilla CSS/JS, no separate frontend build.
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Java 17, Spring Boot 3.2.5
-- **Security**: Spring Security
-- **Database**: MySQL (Primary), H2 (Development/Testing)
-- **Caching**: Redis
+- **Language / Runtime**: Java 21
+- **Framework**: Spring Boot 3.5.0 (Web, Data JPA, Security, Validation, Thymeleaf)
+- **Database**: MySQL (runtime), H2 (dev/test)
+- **Caching**: Redis (Spring Data Redis)
 - **Frontend**: Thymeleaf, HTML5, CSS3, JavaScript
+- **Utilities**: Lombok, Jackson
 - **Build Tool**: Maven
+- **Containerization**: Docker, Docker Compose
+- **CI**: GitHub Actions (`.github/workflows/maven.yml`)
 
 ## 🏁 Getting Started
 
 ### Prerequisites
 
-- `Java 17` or higher
+- `Java 21` or higher
 - `Maven 3.6+`
 - `MySQL 8.0+`
-- `Redis` (Running on localhost:6379)
+- `Redis` (running on `localhost:6379`)
 
 ### Installation & Setup
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/devcancode11/gand-fadh-project.git
-   cd urban-company-clone
+   git clone https://github.com/Dharamrana/urban-clone.git
+   cd urban-clone
    ```
 
 2. **Database Setup**
-   Create a MySQL database named `urban_company_db`:
+   Create a MySQL database, e.g.:
    ```sql
    CREATE DATABASE urban_company_db;
    ```
 
 3. **Configure Application**
-   Open `src/main/resources/application.properties` and update the database credentials:
+   Update the database credentials in `src/main/resources/application.properties` (or use `application-dev.properties` for local development):
    ```properties
    spring.datasource.username=your_mysql_username
    spring.datasource.password=your_mysql_password
@@ -56,30 +59,61 @@ A full-stack service booking application built with Spring Boot, designed to mim
    mvn clean install
    mvn spring-boot:run
    ```
+   On Windows, you can also use the included `run-app.bat`.
 
 5. **Access the App**
    Visit `http://localhost:8080` in your browser.
 
+### Run with Docker
+
+```bash
+docker compose up --build
+```
+This uses the provided `Dockerfile` and `docker-compose.yml` to build and run the app.
+
 ## 📂 Project Structure
 
 ```
-urban-company-clone/
+urban-clone/
+├── .github/
+│   └── workflows/maven.yml         # CI build pipeline
+├── data/                           # Local H2 database file(s)
 ├── src/
 │   ├── main/
 │   │   ├── java/com/urbancompany/clone/
-│   │   │   ├── config/      # Security, Redis, and App configurations
-│   │   │   ├── controller/  # Web and API endpoints
-│   │   │   ├── exception/   # Global error handling
-│   │   │   ├── model/       # JPA Entities (User, Service, etc.)
-│   │   │   ├── repository/   # Data Access Layer
-│   │   │   └── service/      # Business Logic Layer
+│   │   │   ├── config/             # Security, Redis, cache, and user-details config
+│   │   │   ├── controller/         # Web and API endpoints (auth, services, providers, requests)
+│   │   │   ├── exception/          # Global error handling
+│   │   │   ├── model/              # JPA entities (User, Service, ServiceProvider, ServiceRequest, ...)
+│   │   │   ├── repository/         # Spring Data JPA repositories
+│   │   │   ├── service/            # Business logic layer
+│   │   │   └── UrbanCompanyCloneApplication.java
 │   │   └── resources/
-│   │       ├── static/       # CSS, JS, and Images
-│   │       └── templates/    # Thymeleaf HTML templates
-│   └── test/                # Unit and Integration tests
-├── pom.xml                  # Maven dependencies
+│   │       ├── application.properties
+│   │       ├── application-dev.properties
+│   │       ├── static/             # CSS and JS assets
+│   │       └── templates/          # Thymeleaf HTML views (incl. fragments/)
+│   └── test/
+│       ├── java/com/urbancompany/clone/   # Unit and integration tests
+│       └── resources/application-test.properties
+├── docker-compose.yml
+├── Dockerfile
+├── pom.xml
+├── run-app.bat
 └── README.md
 ```
+
+## 🧪 Testing
+
+Run the test suite with:
+```bash
+mvn test
+```
+Tests cover the authentication flow, booking/cart workflow, provider matching, and core controllers/services (see `src/test/java`).
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting changes.
 
 ## 📄 License
 
