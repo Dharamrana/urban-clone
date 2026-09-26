@@ -1,10 +1,12 @@
-# Build stage
-FROM maven:3.8.5-openjdk-17 AS build
-COPY . .
-RUN mvn clean package -DskipTests
+# Build with the same Java version configured in pom.xml.
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /workspace
+COPY pom.xml ./
+COPY src ./src
+RUN mvn -B -DskipTests package
 
-# Run stage
-FROM openjdk:17-jdk-slim
-COPY --from=build /target/urban-company-clone-1.0.0.jar app.jar
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /workspace/target/urban-company-clone-1.0.0.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
