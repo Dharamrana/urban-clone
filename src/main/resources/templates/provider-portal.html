@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Portal - UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/provider-portal" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService Partner</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/provider-portal" class="active">My Jobs</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons logged-in">
+            <span class="user-greet">Hi, <span th:text="${provider.name}">Partner</span></span>
+            <button id="availToggle" class="btn btn-sm"
+                    th:classappend="${provider.isAvailable} ? 'btn-primary' : 'btn-outline'"
+                    onclick="toggleAvailability()">â€¦</button>
+        </div>
+    </div>
+</header>
+
+<section class="page-header">
+    <div class="container">
+        <h1>Partner Dashboard</h1>
+        <p>Accept jobs, verify OTPs, complete visits and track earnings</p>
+    </div>
+</section>
+
+<section class="requests-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">â‚¹<span th:text="${earnings.monthEarnings}">0</span></div>
+                <div class="stat-label">Earned in <span th:text="${earnings.month}">month</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:text="${earnings.activeJobs}">0</div>
+                <div class="stat-label">Active jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:text="${earnings.completedJobs}">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">â˜… <span th:text="${earnings.rating}">0</span></div>
+                <div class="stat-label">My rating</div>
+            </div>
+        </div>
+
+        <h2>My Jobs</h2>
+        <div th:if="${jobs.empty}" class="empty-state">
+            <i class="fas fa-briefcase fa-3x"></i>
+            <h3>No jobs yet</h3>
+            <p>Accept work from the open pool below.</p>
+        </div>
+        <div class="requests-list">
+            <div th:each="job : ${jobs}" class="request-card" th:id="'job-' + ${job.id}">
+                <div class="request-header">
+                    <h3 th:text="${job.service != null ? job.service.name : 'Service'}">Service</h3>
+                    <span class="status-badge"
+                          th:classappend="'status-' + ${job.status}"
+                          th:text="${job.status}">ASSIGNED</span>
+                </div>
+                <div class="request-details">
+                    <p><i class="fas fa-user"></i> Customer: <span th:text="${job.user != null ? job.user.name : ''}">â€”</span>
+                        (<span th:text="${job.user != null ? job.user.phone : ''}">â€”</span>)</p>
+                    <p th:if="${job.scheduledDate != null}"><i class="fas fa-calendar"></i> Visit: <span th:text="${job.scheduledDate} + ' Â· ' + ${job.scheduledSlot}">Slot</span></p>
+                    <p><i class="fas fa-map-marker-alt"></i> <span th:text="${job.address}">Address</span></p>
+                    <ul th:if="${job.items != null && !job.items.empty}" class="booking-lines">
+                        <li th:each="item : ${job.items}">
+                            <span th:text="${item.serviceName} + ' Ã— ' + ${item.quantity}">Service Ã— 1</span>
+                            <strong>â‚¹<span th:text="${item.unitPrice * item.quantity}">0</span></strong>
+                        </li>
+                    </ul>
+                    <p th:if="${job.finalPrice != null}"><i class="fas fa-rupee-sign"></i> Collect: â‚¹<span th:text="${job.finalPrice}"></span>
+                        (<span th:text="${job.paymentStatus}">PENDING</span>)</p>
+                </div>
+                <div class="request-actions">
+                    <span th:if="${job.status != null && job.status.name() == 'ASSIGNED'}">
+                        <input th:id="'otp-' + ${job.id}" class="otp-input" maxlength="4" placeholder="Customer OTP" inputmode="numeric">
+                        <button class="btn btn-sm btn-primary" th:attr="onclick='startJob(' + ${job.id} + ')'">Start with OTP</button>
+                        <button class="btn btn-sm btn-outline" th:attr="onclick='rejectJob(' + ${job.id} + ')'">Reject</button>
+                    </span>
+                    <span th:if="${job.status != null && job.status.name() == 'IN_PROGRESS'}">
+                        <button class="btn btn-sm btn-primary" th:attr="onclick='completeJob(' + ${job.id} + ')'">Complete visit</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <h2>Open Pool</h2>
+        <p class="checkout-note">Unassigned bookings matching your services. Accept to take the job.</p>
+        <div th:if="${pool.empty}">
+            <p>Nothing open right now. Stay available!</p>
+        </div>
+        <div class="requests-list">
+            <div th:each="job : ${pool}" class="request-card">
+                <div class="request-header">
+                    <h3 th:text="${job.service != null ? job.service.name : 'Service'}">Service</h3>
+                    <span class="status-badge status-PENDING">PENDING</span>
+                </div>
+                <div class="request-details">
+                    <p th:if="${job.scheduledDate != null}"><i class="fas fa-calendar"></i> Visit: <span th:text="${job.scheduledDate} + ' Â· ' + ${job.scheduledSlot}">Slot</span></p>
+                    <p><i class="fas fa-map-marker-alt"></i> <span th:text="${job.address}">Address</span></p>
+                    <p th:if="${job.finalPrice != null}"><i class="fas fa-rupee-sign"></i> Worth: â‚¹<span th:text="${job.finalPrice}"></span></p>
+                </div>
+                <div class="request-actions">
+                    <button class="btn btn-sm btn-primary" th:attr="onclick='acceptJob(' + ${job.id} + ')'">Accept job</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script th:src="@{/js/provider.js}"></script>
+<script th:inline="javascript">
+    var PROVIDER_AVAILABLE = [[${provider.isAvailable}]];
+</script>
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+</body>
+</html>
+

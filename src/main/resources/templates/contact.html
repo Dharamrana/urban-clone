@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact â€” UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/request">Book Service</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact" class="active">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons" th:if="${currentUser == null}">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/signup" class="btn btn-primary">Sign up</a>
+        </div>
+        <div class="auth-buttons logged-in" th:if="${currentUser != null}">
+            <span class="user-greet">Hi, <span th:text="${currentUser.name}">User</span></span>
+            <a href="/requests" class="btn btn-outline btn-sm">My Bookings</a>
+        </div>
+    </div>
+</header>
+
+<section class="page-header">
+    <div class="container">
+        <h1>Contact us</h1>
+        <p>We'd love to hear from you</p>
+    </div>
+</section>
+
+<section class="contact-section">
+    <div class="container">
+        <div class="contact-content">
+            <div class="contact-info">
+                <h2 style="text-align:left; margin-bottom:20px;">Get in touch</h2>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <p>New Delhi, NCR, India</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <p>+91-1800-123-4567</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <p>support@urbanservice.com</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-clock"></i>
+                    <p>Monâ€“Sat: 8:00 AM â€“ 9:00 PM</p>
+                </div>
+            </div>
+            <div class="contact-form-container">
+                <h2 style="text-align:left; margin-bottom:20px;">Send a message</h2>
+                <form id="contactForm" class="contact-form">
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <input type="text" name="name" placeholder="Your name" required style="width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:15px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <input type="email" name="email" placeholder="Your email" required style="width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:15px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <input type="text" name="subject" placeholder="Subject" required style="width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:15px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <textarea name="message" rows="4" placeholder="Your message" required style="width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:15px; resize:vertical;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+</body>
+</html>
+

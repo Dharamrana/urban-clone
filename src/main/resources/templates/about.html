@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About â€” UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/request">Book Service</a></li>
+                <li><a href="/about" class="active">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons" th:if="${currentUser == null}">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/signup" class="btn btn-primary">Sign up</a>
+        </div>
+        <div class="auth-buttons logged-in" th:if="${currentUser != null}">
+            <span class="user-greet">Hi, <span th:text="${currentUser.name}">User</span></span>
+            <a href="/requests" class="btn btn-outline btn-sm">My Bookings</a>
+        </div>
+    </div>
+</header>
+
+<section class="page-header">
+    <div class="container">
+        <h1>About UrbanService</h1>
+        <p>Making quality home services accessible to everyone</p>
+    </div>
+</section>
+
+<section class="about-section">
+    <div class="container">
+        <div class="about-content">
+            <div class="about-text">
+                <div class="section-title" style="text-align:left">Who we are</div>
+                <h2 style="text-align:left; margin-bottom:16px;">Built for real homes, real people</h2>
+                <p style="text-align:left; color:var(--ink-light); margin-bottom:20px; line-height:1.7;">
+                    UrbanService connects you with trusted, background-verified professionals in your
+                    neighbourhood. We started with a simple idea: finding reliable help for your home
+                    shouldn't be a headache. Today, thousands of customers across Delhi NCR book
+                    cleaning, repairs, wellness and more through us every week.
+                </p>
+
+                <h2 style="text-align:left; font-size:22px; margin-bottom:16px;">What we believe</h2>
+                <ul class="features-list">
+                    <li><i class="fas fa-check"></i> Every professional is background-verified</li>
+                    <li><i class="fas fa-check"></i> Upfront, transparent pricing â€” no surprises</li>
+                    <li><i class="fas fa-check"></i> Service guarantee on every booking</li>
+                    <li><i class="fas fa-check"></i> Real-time tracking and instant support</li>
+                    <li><i class="fas fa-check"></i> Easy rescheduling and secure payments</li>
+                </ul>
+            </div>
+            <div class="about-image">
+                <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=700&fit=crop" alt="Professional cleaning service" style="width:100%; border-radius:var(--radius); box-shadow:var(--shadow);">
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+</body>
+</html>
+

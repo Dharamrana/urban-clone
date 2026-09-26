@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanService - Book a Service</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/request" class="active">Book Service</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons" th:if="${currentUser == null}">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/signup" class="btn btn-primary">Sign up</a>
+        </div>
+        <div class="auth-buttons logged-in" th:if="${currentUser != null}">
+            <span class="user-greet">Hi, <span th:text="${currentUser.name}">User</span></span>
+            <a href="/requests" class="btn btn-outline btn-sm">My Bookings</a>
+        </div>
+    </div>
+</header>
+
+<section class="page-header">
+    <div class="container">
+        <h1>Book a Service</h1>
+        <p>Choose service, pick a slot, confirm address &amp; pay â€” just like Urban Company</p>
+    </div>
+</section>
+
+<section class="booking-form-section">
+    <div class="container">
+        <div class="booking-form-container wizard">
+            <ol class="wizard-steps" id="wizardSteps">
+                <li data-step="1" class="active"><span>1</span> Service</li>
+                <li data-step="2"><span>2</span> Slot</li>
+                <li data-step="3"><span>3</span> Address</li>
+                <li data-step="4"><span>4</span> Checkout</li>
+            </ol>
+
+            <form id="bookingForm" class="booking-form" onsubmit="return false;">
+                <!-- STEP 1: service + professional -->
+                <div class="wizard-pane active" data-pane="1">
+                    <div class="form-section">
+                        <h2>1. Select service &amp; professional</h2>
+                        <div id="cartLinesBlock" style="display: none;">
+                            <h3>Your cart â€” one visit, one professional</h3>
+                            <div id="cartLines"></div>
+                            <button type="button" class="btn btn-sm btn-outline" onclick="clearCart(); syncBookingMode();">Clear cart</button>
+                        </div>
+                        <div class="form-group" id="singleServiceGroup">
+                            <label for="serviceId">Select Service *</label>
+                            <select id="serviceId" name="serviceId" onchange="loadProviders()">
+                                <option value="">-- Select a Service --</option>
+                                <option th:each="service : ${services}"
+                                        th:value="${service.id}"
+                                        th:text="${service.name}">Service Name</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="providerSelectionGroup" style="display: none;">
+                            <label for="providerId">Select Professional *</label>
+                            <select id="providerId" name="providerId" required>
+                                <option value="">-- Select a Service First --</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline" onclick="autoSelectNearest()">Auto-select Nearest</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Job Details (Optional)</label>
+                            <textarea id="description" name="description" rows="3"
+                                      placeholder="Describe your service requirements..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions wizard-nav">
+                        <button type="button" class="btn btn-primary" onclick="wizardNext(2)">Continue: Pick Slot â†’</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: slot -->
+                <div class="wizard-pane" data-pane="2">
+                    <div class="form-section">
+                        <h2>2. Pick visit date &amp; time</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="slotDate">Visit Date *</label>
+                                <input type="date" id="slotDate" name="slotDate" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Time Slot *</label>
+                            <div id="slotGrid" class="slot-grid"></div>
+                        </div>
+                    </div>
+                    <div class="form-actions wizard-nav">
+                        <button type="button" class="btn btn-outline" onclick="wizardGo(1)">â† Back</button>
+                        <button type="button" class="btn btn-primary" onclick="wizardNext(3)">Continue: Address â†’</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: address -->
+                <div class="wizard-pane" data-pane="3">
+                    <div class="form-section">
+                        <h2>3. Your details &amp; address</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customerName">Full Name *</label>
+                                <input type="text" id="customerName" name="customerName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="customerPhone">Phone Number *</label>
+                                <input type="tel" id="customerPhone" name="customerPhone" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customerEmail">Email Address</label>
+                                <input type="email" id="customerEmail" name="customerEmail">
+                            </div>
+                            <div class="form-group">
+                                <label for="customerAddress">Service Address *</label>
+                                <textarea id="customerAddress" name="customerAddress" rows="2" required></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="lat">Latitude *</label>
+                                <input type="number" step="0.000001" id="lat" name="lat" required placeholder="e.g. 28.6139">
+                            </div>
+                            <div class="form-group">
+                                <label for="lng">Longitude *</label>
+                                <input type="number" step="0.000001" id="lng" name="lng" required placeholder="e.g. 77.2090">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions wizard-nav">
+                        <button type="button" class="btn btn-outline" onclick="wizardGo(2)">â† Back</button>
+                        <button type="button" class="btn btn-primary" onclick="wizardNext(4)">Continue: Checkout â†’</button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: checkout -->
+                <div class="wizard-pane" data-pane="4">
+                    <div class="form-section">
+                        <h2>4. Price summary &amp; payment</h2>
+                        <div id="checkoutSummary" class="checkout-summary">
+                            <p>Select a service to see the price breakup.</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Method *</label>
+                            <div class="pay-methods">
+                                <label><input type="radio" name="paymentMethod" value="UPI" checked> UPI</label>
+                                <label><input type="radio" name="paymentMethod" value="CARD"> Card</label>
+                                <label><input type="radio" name="paymentMethod" value="CASH"> Pay after service</label>
+                            </div>
+                        </div>
+                        <p class="checkout-note"><i class="fas fa-shield-alt"></i> Pay securely on visit completion. Free rescheduling up to 2 hours before the slot.</p>
+                    </div>
+                    <div class="form-actions wizard-nav">
+                        <button type="button" class="btn btn-outline" onclick="wizardGo(3)">â† Back</button>
+                        <button type="button" class="btn btn-primary btn-lg" onclick="submitBooking()">Confirm Booking</button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="bookingResult" class="booking-result" style="display: none;">
+                <h3>Booking Confirmed!</h3>
+                <p id="resultMessage"></p>
+                <p id="resultMeta" class="result-meta"></p>
+                <div class="form-actions">
+                    <a id="trackLink" href="/requests" class="btn btn-primary">Track My Booking</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+<script th:src="@{/js/cart.js}"></script>
+<script th:src="@{/js/booking.js}"></script>
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+</body>
+</html>
+

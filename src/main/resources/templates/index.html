@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:fragment="http://www.thymeleaf.org/fragment">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanService — Home Services at Your Doorstep</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/" class="active">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/request">Book Service</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons" th:if="${currentUser == null}">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/signup" class="btn btn-primary">Sign up</a>
+        </div>
+        <div class="auth-buttons logged-in" th:if="${currentUser != null}">
+            <span class="user-greet">Hi, <span th:text="${currentUser.name}">User</span></span>
+            <a href="/requests" class="btn btn-outline btn-sm">My Bookings</a>
+        </div>
+    </div>
+</header>
+
+<th:block th:replace="~{fragments/common :: locationBar}" />
+
+<section class="hero">
+    <div class="container">
+        <h1>Your home deserves the best care</h1>
+        <p>Book trusted, background-verified professionals for cleaning, repairs, wellness and more — all at your doorstep.</p>
+        <div class="hero-search">
+            <form id="serviceSearchForm" class="search-form">
+                <input type="text" id="searchInput" placeholder="What do you need help with?" autocomplete="off">
+                <input type="hidden" id="latInput" value="28.6139">
+                <input type="hidden" id="lngInput" value="77.2090">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section class="services-preview">
+    <div class="container">
+        <div class="section-title">What we offer</div>
+        <h2>Services you'll love</h2>
+        <p>From deep cleaning to furniture repair — book it all in one place.</p>
+        <div class="services-grid" id="servicesGrid">
+            <div th:each="service : ${services}" class="service-card">
+                <a th:href="@{'/providers?serviceId=' + ${service.id}}" style="text-decoration:none; color:inherit; display:block;">
+                    <img class="service-card-photo" th:src="${service.photoUrl}" th:alt="${service.name}" loading="lazy">
+                    <div class="service-card-body">
+                        <h3 th:text="${service.name}">Service Name</h3>
+                        <p th:text="${service.description}">Service description</p>
+                        <div class="service-price">From &#8377;<span th:text="${service.basePrice}">0</span></div>
+                    </div>
+                </a>
+                <div class="service-card-actions">
+                    <button class="btn btn-primary btn-sm"
+                            th:attr="onclick='addToCart(' + ${service.id} + ', &quot;' + ${service.name} + '&quot;, ' + ${service.basePrice} + ')'">Add to cart</button>
+                    <a th:href="@{'/providers?serviceId=' + ${service.id}}" class="btn btn-outline btn-sm">View pros</a>
+                </div>
+            </div>
+        </div>
+        <div style="text-align:center; margin-top:36px;">
+            <a href="/services" class="btn btn-outline">View all services</a>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <div class="container">
+        <div class="section-title">Simple process</div>
+        <h2>How it works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Pick a service</h3>
+                <p>Browse categories or search for exactly what you need.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Choose a time</h3>
+                <p>Book a slot that works for you — same day or later this week.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Meet your pro</h3>
+                <p>A verified professional arrives at your doorstep on time.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Pay &amp; relax</h3>
+                <p>Pay securely after the job is done. Rate your experience.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="testimonials">
+    <div class="container">
+        <div class="section-title">Real reviews</div>
+        <h2>What our customers say</h2>
+        <div class="testimonial-grid" id="reviewsContainer">
+            <div class="empty-state" style="grid-column:1/-1;">
+                <i class="fas fa-comments"></i>
+                <h3>No reviews yet</h3>
+                <p>Customer reviews will appear here after completed bookings.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div>
+                <div class="footer-logo">
+                    <i class="fas fa-tools"></i>
+                    <span>UrbanService</span>
+                </div>
+                <p style="font-size:14px; max-width:280px; line-height:1.5;">Trusted home services across Delhi NCR. Book professionals for cleaning, repairs, wellness and more.</p>
+            </div>
+            <div class="footer-links">
+                <a href="/services">Services</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+                <a href="/request">Book Now</a>
+            </div>
+            <div class="footer-social">
+                <i class="fab fa-facebook"></i>
+                <i class="fab fa-twitter"></i>
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-linkedin"></i>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+<script th:src="@{/js/main.js}"></script>
+<script th:src="@{/js/cart.js}"></script>
+</body>
+</html>

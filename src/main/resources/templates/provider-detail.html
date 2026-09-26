@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${provider.name + ' - UrbanService'}">Provider - UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/request">Book Service</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons" th:if="${currentUser == null}">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/signup" class="btn btn-primary">Sign up</a>
+        </div>
+        <div class="auth-buttons logged-in" th:if="${currentUser != null}">
+            <span class="user-greet">Hi, <span th:text="${currentUser.name}">User</span></span>
+            <a href="/requests" class="btn btn-outline btn-sm">My Bookings</a>
+        </div>
+    </div>
+</header>
+
+<section class="provider-profile">
+    <div class="container">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <img th:if="${provider.profileImageUrl != null}" th:src="${provider.profileImageUrl}" th:alt="${provider.name}">
+                <i th:unless="${provider.profileImageUrl != null}" class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+                <h1 th:text="${provider.name}">Provider Name</h1>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <span th:text="${provider.rating} + ' (' + ${provider.totalReviews} + ' reviews)'">0.0</span>
+                </div>
+                <p th:text="${provider.experienceYears + ' years of experience'}" style="color:var(--ink-light)">0 years</p>
+                <p th:if="${provider.isVerified}" class="verified-badge"><i class="fas fa-check-circle"></i> Verified professional</p>
+            </div>
+        </div>
+
+        <div class="profile-details">
+            <div class="detail-section">
+                <h3>About</h3>
+                <p th:text="${provider.bio != null ? provider.bio : 'Professional service provider with ' + provider.experienceYears + ' years of experience.'}">Bio</p>
+            </div>
+
+            <div class="detail-section">
+                <h3>Certifications</h3>
+                <ul th:if="${provider.certifications != null && !provider.certifications.isEmpty()}">
+                    <li th:each="cert : ${provider.certifications}" th:text="${cert}">Certification</li>
+                </ul>
+                <p th:if="${provider.certifications == null || provider.certifications.isEmpty()}">No certifications listed</p>
+            </div>
+
+            <div class="detail-section">
+                <h3>Contact</h3>
+                <p><i class="fas fa-phone"></i> <span th:text="${provider.phone}">Phone</span></p>
+                <p><i class="fas fa-envelope"></i> <span th:text="${provider.email}">Email</span></p>
+                <p><i class="fas fa-map-marker-alt"></i>
+                   <span th:text="${provider.location.latitude} + ', ' + ${provider.location.longitude}">Location</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="booking-section">
+            <a th:href="@{'/request'(serviceId=${serviceId}, providerId=${provider.id})}" class="btn btn-primary btn-lg">Book This Provider</a>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+</body>
+</html>
+

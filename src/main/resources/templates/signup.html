@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up — UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/request">Book Service</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/signup" class="btn btn-primary">Sign up</a>
+        </div>
+    </div>
+</header>
+
+<section class="page-header">
+    <div class="container">
+        <h1>Create your account</h1>
+        <p>One account for booking, tracking and ratings</p>
+    </div>
+</section>
+
+<section class="booking-form-section">
+    <div class="container">
+        <div class="booking-form-container">
+            <form id="signupForm" class="booking-form" onsubmit="return false;">
+                <div id="signupError" class="auth-error" style="display:none"></div>
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Full name</label>
+                            <input type="text" id="name" required autocomplete="name" placeholder="Your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone number</label>
+                            <input type="tel" id="phone" required autocomplete="tel" placeholder="98765 43210">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email address</label>
+                        <input type="email" id="email" required autocomplete="email" placeholder="you@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password (min 6 characters)</label>
+                        <input type="password" id="password" required minlength="6" autocomplete="new-password" placeholder="Create a password">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary btn-lg" style="width:100%" onclick="submitSignup()">Create account</button>
+                    <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+function submitSignup() {
+    var err = document.getElementById('signupError');
+    err.style.display = 'none';
+    var payload = {
+        name: document.getElementById('name').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+    };
+    fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+        .then(function(response) {
+            if (!response.ok) {
+                return response.json().then(function(body) {
+                    throw new Error(body.message || 'Sign up failed');
+                });
+            }
+            return response.json();
+        })
+        .then(function() {
+            var next = new URLSearchParams(window.location.search).get('next') || '/';
+            window.location.href = next;
+        })
+        .catch(function(e) {
+            err.textContent = e.message;
+            err.style.display = 'block';
+        });
+}
+</script>
+</body>
+</html>

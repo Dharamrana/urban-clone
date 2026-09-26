@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay Securely - UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/requests">My Bookings</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons logged-in" th:if="${currentUser != null}">
+            <span class="user-greet">Hi, <span th:text="${currentUser.name}">User</span></span>
+        </div>
+    </div>
+</header>
+
+<section class="page-header">
+    <div class="container">
+        <h1>Secure Payment</h1>
+        <p>Mock gateway for demo â€” no real money moves</p>
+    </div>
+</section>
+
+<section class="booking-form-section">
+    <div class="container">
+        <div class="booking-form-container">
+            <div class="checkout-summary">
+                <div class="summary-row"><span>Booking</span><strong th:text="'#' + ${booking.id}">#0</strong></div>
+                <div class="summary-row"><span>Service</span><strong th:text="${booking.service != null ? booking.service.name : ''}">Service</strong></div>
+                <div class="summary-row"><span>Visit</span><strong th:text="${booking.scheduledDate} + ' Â· ' + ${booking.scheduledSlot}">Slot</strong></div>
+                <div class="summary-row"><span>Method</span><strong th:text="${booking.paymentMethod}">UPI</strong></div>
+                <div class="summary-row total"><span>Amount</span><strong>â‚¹<span th:text="${booking.finalPrice}">0</span></strong></div>
+                <div class="summary-row" th:if="${booking.paymentStatus != null}"><span>Status</span><strong th:text="${booking.paymentStatus}">PENDING</strong></div>
+            </div>
+
+            <div id="payBox" class="form-section">
+                <h2 th:text="'Pay with ' + ${booking.paymentMethod}">Pay</h2>
+                <div class="form-group" th:if="${booking.paymentMethod == 'UPI'}">
+                    <label for="upiId">Your UPI ID</label>
+                    <input type="text" id="upiId" placeholder="name@upi">
+                </div>
+                <div class="form-row" th:if="${booking.paymentMethod == 'CARD'}">
+                    <div class="form-group">
+                        <label for="cardNo">Card Number</label>
+                        <input type="text" id="cardNo" placeholder="4111 1111 1111 1111" maxlength="19">
+                    </div>
+                    <div class="form-group">
+                        <label for="cardCvv">CVV</label>
+                        <input type="password" id="cardCvv" placeholder="123" maxlength="4">
+                    </div>
+                </div>
+                <div id="payError" class="auth-error" style="display:none"></div>
+                <div class="form-actions wizard-nav">
+                    <a th:href="@{'/requests?highlight=' + ${booking.id}}" class="btn btn-outline">Pay later</a>
+                    <button class="btn btn-primary btn-lg" onclick="mockPay(true)">Pay â‚¹<span th:text="${booking.finalPrice}">0</span></button>
+                </div>
+                <p class="checkout-note">Demo controls: <a href="#" onclick="mockPay(false); return false;">simulate a failed payment</a></p>
+            </div>
+
+            <div id="payDone" class="booking-result" style="display:none">
+                <h3>Payment Successful!</h3>
+                <p id="payRef"></p>
+                <div class="form-actions">
+                    <a id="payTrack" href="/requests" class="btn btn-primary">Track My Booking</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script th:inline="javascript">
+    var BOOKING_ID = [[${booking.id}]];
+    var PAY_METHOD = [[${booking.paymentMethod}]];
+
+    function payError(msg) {
+        var el = document.getElementById('payError');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function mockPay(success) {
+        if (PAY_METHOD === 'UPI') {
+            var upi = document.getElementById('upiId');
+            if (success && upi && upi.value.trim().indexOf('@') === -1) {
+                payError('Enter a valid UPI ID (e.g. name@upi).');
+                return;
+            }
+        }
+        document.getElementById('payError').style.display = 'none';
+        fetch('/api/requests/' + BOOKING_ID + '/pay/init', { method: 'POST' })
+            .then(function(r) { return r.json().then(function(b) { return { status: r.status, body: b }; }); })
+            .then(function(w) {
+                if (w.status === 401) {
+                    window.location.href = '/login?next=' + encodeURIComponent('/pay/' + BOOKING_ID);
+                    return null;
+                }
+                if (w.body.mode === 'CASH') {
+                    window.location.href = '/requests?highlight=' + BOOKING_ID;
+                    return null;
+                }
+                return fetch('/api/requests/' + BOOKING_ID + '/pay/confirm?ref='
+                    + encodeURIComponent(w.body.ref) + '&success=' + success, { method: 'POST' })
+                    .then(function(r2) {
+                        if (!r2.ok) throw new Error('Payment failed. Please try again.');
+                        return r2.json();
+                    })
+                    .then(function(done) {
+                        if (!success) {
+                            payError('Payment declined by the mock bank. Try again.');
+                            return;
+                        }
+                        document.getElementById('payBox').style.display = 'none';
+                        document.getElementById('payDone').style.display = 'block';
+                        document.getElementById('payRef').textContent =
+                            'Reference ' + done.paymentRef + ' Â· Booking #' + done.id + ' confirmed.';
+                        document.getElementById('payTrack').href = '/requests?highlight=' + done.id;
+                    });
+            })
+            .catch(function(e) { payError(e.message); });
+    }
+</script>
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+</body>
+</html>
+

@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>UrbanService</span>
+        </a>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/request">Book Service</a></li>
+                <li><a href="/requests" class="active">My Bookings</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons" th:if="${currentUser == null}">
+            <a href="/login" class="btn btn-outline">Log in</a>
+            <a href="/signup" class="btn btn-primary">Sign up</a>
+        </div>
+        <div class="auth-buttons logged-in" th:if="${currentUser != null}">
+            <span class="user-greet">Hi, <span th:text="${currentUser.name}">User</span></span>
+        </div>
+    </div>
+</header>
+
+<section class="page-header">
+    <div class="container">
+        <h1>My Bookings</h1>
+        <p>Track visits, reschedule, cancel or rate your professional</p>
+    </div>
+</section>
+
+<section class="requests-section">
+    <div class="container">
+        <div th:if="${requests.empty}" class="empty-state">
+            <i class="fas fa-inbox fa-3x"></i>
+            <h3>No bookings yet</h3>
+            <p>You have not made any service bookings yet.</p>
+            <a href="/request" class="btn btn-primary">Book a Service</a>
+        </div>
+
+        <div th:if="${!requests.empty}" class="requests-list">
+            <div th:each="request : ${requests}" class="request-card" th:id="'booking-' + ${request.id}">
+                <div class="request-header">
+                    <h3 th:text="${request.service != null ? request.service.name : 'Service'}">Service Name</h3>
+                    <span class="status-badge"
+                          th:classappend="'status-' + ${request.status}"
+                          th:text="${request.status}">PENDING</span>
+                </div>
+                <!-- UC style progress timeline -->
+                <ol class="track-timeline" th:attr="data-status=${request.status}">
+                    <li data-stage="PENDING" th:classappend="${request.status != null && (request.status.name() == 'PENDING' || request.status.name() == 'ASSIGNED' || request.status.name() == 'IN_PROGRESS' || request.status.name() == 'COMPLETED')} ? 'on'">Booked</li>
+                    <li data-stage="ASSIGNED" th:classappend="${request.status != null && (request.status.name() == 'ASSIGNED' || request.status.name() == 'IN_PROGRESS' || request.status.name() == 'COMPLETED')} ? 'on'">Assigned</li>
+                    <li data-stage="IN_PROGRESS" th:classappend="${request.status != null && (request.status.name() == 'IN_PROGRESS' || request.status.name() == 'COMPLETED')} ? 'on'">In progress</li>
+                    <li data-stage="COMPLETED" th:classappend="${request.status != null && request.status.name() == 'COMPLETED'} ? 'on'">Done</li>
+                </ol>
+                <div class="request-details">
+                    <p th:text="${request.description}">Description</p>
+                    <ul th:if="${request.items != null && !request.items.empty}" class="booking-lines">
+                        <li th:each="item : ${request.items}">
+                            <span th:text="${item.serviceName} + ' Ã— ' + ${item.quantity}">Service Ã— 1</span>
+                            <strong>&#8377;<span th:text="${item.unitPrice * item.quantity}">0</span></strong>
+                        </li>
+                    </ul>
+                    <p><i class="fas fa-user"></i> Professional: <span th:text="${request.provider != null ? request.provider.name : 'Assigningâ€¦'}">N/A</span></p>
+                    <p th:if="${request.scheduledDate != null}"><i class="fas fa-calendar"></i> Visit: <span th:text="${request.scheduledDate} + ' Â· ' + ${request.scheduledSlot}">Slot</span></p>
+                    <p><i class="fas fa-map-marker-alt"></i> <span th:text="${request.address}">Address</span></p>
+                    <p><i class="fas fa-clock"></i> Booked: <span th:text="${request.requestedAt != null ? #temporals.format(request.requestedAt, 'MMM dd, yyyy HH:mm') : ''}"></span></p>
+                    <p th:if="${request.paymentMethod != null}"><i class="fas fa-wallet"></i> Payment: <span th:text="${request.paymentMethod}">UPI</span>
+                        (<span th:text="${request.paymentStatus}">PENDING</span>)</p>
+                    <p th:if="${request.finalPrice != null}"><i class="fas fa-rupee-sign"></i> Total: &#8377;<span th:text="${request.finalPrice}"></span></p>
+                    <p th:if="${request.status != null && request.status.name() == 'ASSIGNED' && request.startOtp != null}"
+                       class="otp-share"><i class="fas fa-key"></i> Share this code with your professional to start: <strong th:text="${request.startOtp}">0000</strong></p>
+                    <p th:if="${request.rating != null}"><i class="fas fa-star"></i> Your rating: <span th:text="${request.rating} + '/5'">5/5</span>
+                        <span th:if="${request.review != null}" th:text="' â€” ' + ${request.review}"></span></p>
+                </div>
+                <div class="request-actions">
+                    <a class="btn btn-sm btn-primary"
+                       th:if="${request.paymentMethod != null && request.paymentMethod != 'CASH'
+                               && (request.paymentStatus == null || request.paymentStatus == 'PENDING' || request.paymentStatus == 'FAILED')
+                               && request.status != null && request.status.name() != 'CANCELLED'}"
+                       th:href="@{'/pay/' + ${request.id}}">Pay now</a>
+                    <button class="btn btn-sm btn-outline"
+                            th:if="${request.status != null && (request.status.name() == 'PENDING' || request.status.name() == 'ASSIGNED')}"
+                            th:attr="onclick='rescheduleBooking(' + ${request.id} + ')'">Reschedule</button>
+                    <button class="btn btn-sm btn-outline"
+                            th:if="${request.status != null && (request.status.name() == 'PENDING' || request.status.name() == 'ASSIGNED' || request.status.name() == 'IN_PROGRESS')}"
+                            th:attr="onclick='cancelBooking(' + ${request.id} + ')'">Cancel</button>
+                    <button class="btn btn-sm btn-primary"
+                            th:if="${request.status != null && request.status.name() == 'COMPLETED' && request.rating == null}"
+                            th:attr="onclick='rateBooking(' + ${request.id} + ')'">Rate professional</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-bottom">
+            <p>&copy; 2024 UrbanService. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script th:src="@{/js/requests.js}"></script>
+<th:block th:replace="~{fragments/common :: hamburgerMenu}" />
+</body>
+</html>
+
