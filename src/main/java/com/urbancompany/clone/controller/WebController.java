@@ -38,30 +38,24 @@ public class WebController {
 
     @GetMapping("/")
     public String index(Model model) {
-        List<Service> services = serviceService.getAllActiveServices();
-        model.addAttribute("services", services);
+        model.addAttribute("services", serviceService.getAllActiveServices());
         return "index";
     }
 
     @GetMapping("/services")
     public String servicesPage(Model model) {
-        List<Service> services = serviceService.getAllActiveServices();
-        model.addAttribute("services", services);
+        model.addAttribute("services", serviceService.getAllActiveServices());
         return "services";
     }
 
     @GetMapping("/providers")
-    public String providersPage(
-            @RequestParam Long serviceId,
-            @RequestParam(defaultValue = "28.6139") Double lat,
-            @RequestParam(defaultValue = "77.2090") Double lng,
-            @RequestParam(defaultValue = "10") Integer limit,
-            Model model) {
-
+    public String providersPage(@RequestParam Long serviceId,
+                                @RequestParam(defaultValue = "28.6139") Double lat,
+                                @RequestParam(defaultValue = "77.2090") Double lng,
+                                @RequestParam(defaultValue = "10") Integer limit,
+                                Model model) {
         List<ProviderWithDistance> providers = serviceProviderService.getNearestProvidersByService(serviceId, lat, lng, limit);
-
-        Service service = serviceService.getServiceById(serviceId).orElse(null);
-        model.addAttribute("service", service);
+        model.addAttribute("service", serviceService.getServiceById(serviceId).orElse(null));
         model.addAttribute("providers", providers);
         model.addAttribute("lat", lat);
         model.addAttribute("lng", lng);
@@ -69,15 +63,10 @@ public class WebController {
     }
 
     @GetMapping("/provider/{id}")
-    public String providerDetail(@PathVariable Long id,
-                                 @RequestParam(required = false) Long serviceId,
-                                 Model model) {
+    public String providerDetail(@PathVariable Long id, @RequestParam(required = false) Long serviceId, Model model) {
         ServiceProvider provider = serviceProviderService.getProviderById(id).orElse(null);
-        if (provider == null) {
-            return "redirect:/";
-        }
+        if (provider == null) return "redirect:/";
         model.addAttribute("provider", provider);
-        // Pre-select the service this provider was viewed for (fixes empty serviceId in Book link).
         Long effectiveServiceId = serviceId;
         if (effectiveServiceId == null && provider.getServiceIds() != null && !provider.getServiceIds().isEmpty()) {
             effectiveServiceId = provider.getServiceIds().get(0);
@@ -88,48 +77,39 @@ public class WebController {
 
     @GetMapping("/request")
     public String requestPage(Model model) {
-        List<Service> services = serviceService.getAllActiveServices();
-        model.addAttribute("services", services);
+        model.addAttribute("services", serviceService.getAllActiveServices());
         return "request-service";
     }
 
     @GetMapping("/requests")
     public String requestsPage(Authentication authentication, Model model) {
-        // My Bookings: only the logged-in user's requests (UC-style account privacy).
         List<ServiceRequest> requests = List.of();
-        if (authentication != null && authentication.isAuthenticated()
-                && !"anonymousUser".equals(authentication.getPrincipal())) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
             User me = userService.getUserByEmail(authentication.getName()).orElse(null);
-            if (me != null) {
-                requests = serviceRequestService.getRequestsByUser(me.getId());
-            }
+            if (me != null) requests = serviceRequestService.getRequestsByUser(me.getId());
         }
         model.addAttribute("requests", requests);
         return "requests";
     }
 
     @GetMapping("/login")
-    public String loginPage() {
-        return "login";
-    }
+    public String loginPage() { return "login"; }
 
     @GetMapping("/signup")
-    public String signupPage() {
-        return "signup";
+    public String signupPage() { return "signup"; }
+
+    @GetMapping("/map")
+    public String mapPage(Model model) {
+        model.addAttribute("providers", serviceProviderService.getAllProviders());
+        return "map";
     }
 
-    /** Professional workspace: today's jobs, open pool, earnings (ROLE_PROVIDER only). */
     @GetMapping("/provider-portal")
     public String providerPortal(Authentication authentication, Model model) {
-        if (authentication == null || !"PROVIDER".equals(roleOf(authentication))) {
-            return "redirect:/login";
-        }
+        if (authentication == null || !"PROVIDER".equals(roleOf(authentication))) return "redirect:/login";
         ServiceProvider me = serviceProviderService.getAllProviders().stream()
-                .filter(p -> authentication.getName().equalsIgnoreCase(p.getEmail()))
-                .findFirst().orElse(null);
-        if (me == null) {
-            return "redirect:/login";
-        }
+                .filter(p -> authentication.getName().equalsIgnoreCase(p.getEmail())).findFirst().orElse(null);
+        if (me == null) return "redirect:/login";
         model.addAttribute("provider", me);
         model.addAttribute("jobs", serviceRequestService.getRequestsByProvider(me.getId()));
         model.addAttribute("pool", serviceRequestService.getAvailablePool(me.getEmail()));
@@ -137,39 +117,21 @@ public class WebController {
         return "provider-portal";
     }
 
-    /** Mock checkout: pay for a booking with UPI/Card (owner only). */
     @GetMapping("/pay/{id}")
     public String payPage(@PathVariable Long id, Authentication authentication, Model model) {
         ServiceRequest request = serviceRequestService.getRequestById(id).orElse(null);
-        if (request == null) {
-            return "redirect:/requests";
-        }
+        if (request == null) return "redirect:/requests";
         String me = authentication != null ? authentication.getName() : null;
-        boolean mine = me != null && request.getUser() != null
-                && me.equalsIgnoreCase(request.getUser().getEmail());
-        if (!mine) {
-            return "redirect:/requests";
-        }
+        if (me == null || request.getUser() == null || !me.equalsIgnoreCase(request.getUser().getEmail())) return "redirect:/requests";
         model.addAttribute("booking", request);
         return "pay";
     }
 
     private String roleOf(Authentication authentication) {
-        if (authentication == null) {
-            return "";
-        }
-        return authentication.getAuthorities().stream()
-                .map(a -> a.getAuthority().replace("ROLE_", ""))
-                .findFirst().orElse("");
+        if (authentication == null) return "";
+        return authentication.getAuthorities().stream().map(a -> a.getAuthority().replace("ROLE_", "")).findFirst().orElse("");
     }
 
-    @GetMapping("/about")
-    public String aboutPage() {
-        return "about";
-    }
-
-    @GetMapping("/contact")
-    public String contactPage() {
-        return "contact";
-    }
+    @GetMapping("/about") public String aboutPage() { return "about"; }
+    @GetMapping("/contact") public String contactPage() { return "contact"; }
 }
