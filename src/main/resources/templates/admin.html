@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .admin-table { width:100%; border-collapse:collapse; margin:16px 0 32px; background:#fff; }
+        .admin-table th,.admin-table td { padding:12px; border-bottom:1px solid #e5e7eb; text-align:left; }
+        .admin-table th { background:#f8fafc; }
+        .admin-badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; background:#dcfce7; color:#166534; }
+        .admin-badge.pending { background:#fef3c7; color:#92400e; }
+    </style>
+</head>
+<body>
+<header><div class="container">
+    <a href="/admin" class="logo"><i class="fas fa-shield-halved"></i><span>UrbanService Admin</span></a>
+    <nav><ul><li><a href="/admin" class="active">Dashboard</a></li><li><a href="/">View site</a></li></ul></nav>
+    <form th:action="@{/logout}" method="post"><button class="btn btn-outline btn-sm" type="submit">Log out</button></form>
+</div></header>
+
+<section class="page-header"><div class="container"><h1>Platform dashboard</h1><p>Monitor users, providers, bookings, verification and revenue.</p></div></section>
+<section class="requests-section"><div class="container">
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" th:text="${userCount}">0</div><div class="stat-label">Users</div></div>
+        <div class="stat-card"><div class="stat-value" th:text="${providerCount}">0</div><div class="stat-label">Providers</div></div>
+        <div class="stat-card"><div class="stat-value" th:text="${verifiedProviderCount}">0</div><div class="stat-label">Verified providers</div></div>
+        <div class="stat-card"><div class="stat-value" th:text="${bookingCount}">0</div><div class="stat-label">Bookings</div></div>
+        <div class="stat-card"><div class="stat-value">₹<span th:text="${grossRevenue}">0</span></div><div class="stat-label">Recorded revenue</div></div>
+    </div>
+
+    <h2>Provider verification</h2>
+    <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Provider</th><th>Email</th><th>Location</th><th>Verification</th><th>Availability</th></tr></thead>
+    <tbody><tr th:each="provider : ${providers}"><td th:text="${provider.name}">Provider</td><td th:text="${provider.email}">email</td><td th:text="${provider.location != null ? provider.location.city : 'Not set'}">Location</td><td><span class="admin-badge" th:classappend="${!provider.isVerified} ? ' pending'" th:text="${provider.isVerified ? 'Verified' : 'Pending'}">Pending</span></td><td th:text="${provider.isAvailable ? 'Available' : 'Unavailable'}">Available</td></tr></tbody>
+    </table></div>
+
+    <h2>Recent bookings</h2>
+    <div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>ID</th><th>Customer</th><th>Provider</th><th>Status</th><th>Payment</th><th>Amount</th></tr></thead>
+    <tbody><tr th:each="booking : ${requests}"><td th:text="${booking.id}">1</td><td th:text="${booking.user != null ? booking.user.name : '—'}">Customer</td><td th:text="${booking.provider != null ? booking.provider.name : 'Unassigned'}">Provider</td><td th:text="${booking.status}">PENDING</td><td th:text="${booking.paymentStatus}">PENDING</td><td th:text="${booking.finalPrice != null ? '₹' + booking.finalPrice : '—'}">—</td></tr></tbody>
+    </table></div>
+</div></section>
+</body></html>
