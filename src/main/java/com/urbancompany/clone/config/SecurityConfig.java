@@ -15,12 +15,9 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import java.util.LinkedHashMap;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -30,8 +27,7 @@ public class SecurityConfig {
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Please log in first\"}");
         };
-        var entryPoints = new LinkedHashMap<org.springframework.security.web.util.matcher.RequestMatcher,
-                org.springframework.security.web.AuthenticationEntryPoint>();
+        var entryPoints = new LinkedHashMap<org.springframework.security.web.util.matcher.RequestMatcher, org.springframework.security.web.AuthenticationEntryPoint>();
         entryPoints.put(new AntPathRequestMatcher("/api/**"), apiEntryPoint);
         var delegatingEntryPoint = new org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint(entryPoints);
         delegatingEntryPoint.setDefaultEntryPoint(loginEntryPoint);
@@ -40,8 +36,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .exceptionHandling(e -> e.authenticationEntryPoint(delegatingEntryPoint))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/services", "/providers", "/provider/**", "/about", "/contact",
-                                "/login", "/signup", "/css/**", "/js/**", "/h2-console/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/", "/services", "/providers", "/provider/**", "/about", "/contact", "/login", "/signup", "/css/**", "/js/**", "/h2-console/**", "/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/services/**", "/api/providers/**", "/api/requests/slots").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/requests/quote").permitAll()
                         .requestMatchers("/admin", "/admin/**", "/api/admin/**").hasRole("ADMIN")
@@ -49,7 +44,16 @@ public class SecurityConfig {
                         .requestMatchers("/map").authenticated()
                         .requestMatchers("/request", "/requests", "/api/requests", "/api/requests/**", "/api/users/**").authenticated()
                         .anyRequest().permitAll())
-                .formLogin(form -> form.loginPage("/login").defaultSuccessUrl("/", true).permitAll())
+                .formLogin(form -> form.loginPage("/login").successHandler((request, response, authentication) -> {
+                    String selected = request.getParameter("selectedRole");
+                    String actual = authentication.getAuthorities().stream().findFirst().map(a -> a.getAuthority().replace("ROLE_", "")).orElse("");
+                    if (selected != null && !selected.isBlank() && !actual.equals(selected)) {
+                        response.sendRedirect("/login?error");
+                        return;
+                    }
+                    String destination = "ADMIN".equals(actual) ? "/admin" : "PROVIDER".equals(actual) ? "/provider-portal" : "/map";
+                    response.sendRedirect(destination);
+                }).permitAll())
                 .logout(logout -> logout.logoutSuccessUrl("/?logout").permitAll());
         return http.build();
     }
