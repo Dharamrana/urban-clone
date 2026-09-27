@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nearby providers — UrbanService</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body>
+<header><div class="container"><a href="/" class="logo">UrbanService</a><nav><ul><li><a href="/services">Services</a></li><li><a class="active" href="/map">Nearby providers</a></li><li><a href="/requests">My bookings</a></li></ul></nav></div></header>
+<section class="page-header"><div class="container"><h1>Find providers near you</h1><p>Allow location access to see your position and nearby professionals.</p></div></section>
+<section class="map-section"><div class="container"><div id="providerMap" class="provider-map"></div><p id="mapMessage" class="map-message">Locating you…</p></div></section>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script th:inline="javascript">
+const providers = /*[[${providers}]]*/ [];
+const fallback = [28.6139, 77.2090];
+const map = L.map('providerMap').setView(fallback, 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(map);
+const userIcon = L.divIcon({className: 'user-location-marker', html: '<span></span>', iconSize: [24,24], iconAnchor: [12,12]});
+function addProviders() { providers.forEach(function(p) { if (!p.location || p.location.latitude == null || p.location.longitude == null) return; const marker = L.marker([p.location.latitude, p.location.longitude]).addTo(map); marker.bindPopup('<strong>' + (p.name || 'Provider') + '</strong><br>Rating: ' + (p.rating || 0) + '<br>' + (p.isVerified ? 'Verified provider' : 'Verification pending')); }); }
+function showUser(position) { const point = [position.coords.latitude, position.coords.longitude]; map.setView(point, 13); L.marker(point, {icon: userIcon}).addTo(map).bindPopup('<strong>You are here</strong>').openPopup(); addProviders(); document.getElementById('mapMessage').textContent = 'Your location is shown with the pulsing marker.'; }
+function locateError() { addProviders(); document.getElementById('mapMessage').textContent = 'Location unavailable. Showing providers around the default area.'; }
+if (navigator.geolocation) navigator.geolocation.getCurrentPosition(showUser, locateError, {enableHighAccuracy: true, timeout: 8000}); else locateError();
+</script>
+</body></html>
